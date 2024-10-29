@@ -3,45 +3,32 @@ package main
 import (
 	"Project2/internal/infrastructure/file"
 	"Project2/internal/interfaces/controllers/notes"
-	"fmt"
+	"log"
 )
 
 func main() {
-	// Создание сервиса для работы с заметками
-	noteService := notes.NewNoteService()
+	log.SetPrefix("LOG: ")
+	log.SetFlags(log.Ldate | log.Ltime)
 
-	// Создание новых заметок
+	noteService := notes.NewNoteService()
 	noteService.CreateNote(1, "First Note")
 	noteService.CreateNote(2, "Second Note")
 
-	// Чтение всех заметок
 	allNotes, err := noteService.ReadAllNotes()
 	if err != nil {
-		fmt.Println("Error reading notes:", err)
-		return
+		log.Fatal("ошибка при прочтении всех заметок")
 	}
-	fmt.Println("All notes:", allNotes.Notes)
+	log.Println("All notes:", allNotes.Note)
 
-	// Создание экземпляра WorkWithFileImpl
-	fileHandler := &file.WorkWithFileImpl{}
+	fileHandler := file.NewWorkWithFileImpl()
 
-	// Установка данных заметок в WorkWithFileImpl
-	fileHandler.SetNote(allNotes)
+	if _, err := fileHandler.SaveData("Text.txt", allNotes); err != nil {
+		log.Fatal("ошибка при записи в файл")
+	}
 
-	// Сохранение данных в файл
-	success, err := fileHandler.SaveData("Text.txt")
+	loadNotes, err := fileHandler.LoadData("Text.txt")
 	if err != nil {
-		fmt.Println("Error saving data:", err)
-	} else if success {
-		fmt.Println("Data saved successfully to Text.txt")
+		log.Fatal("невозможно прочитать файл")
 	}
-
-	// Чтение данных из файла
-	success, err = fileHandler.LoadData("Text.txt")
-	if err != nil {
-		fmt.Println("Error loading data:", err)
-	} else if success {
-		fmt.Println("Data loaded successfully from Text.txt")
-		fmt.Println("Loaded notes:", fileHandler.Note.Notes)
-	}
+	log.Println("Loaded notes:", loadNotes)
 }
